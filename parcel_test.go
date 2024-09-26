@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	_, err = db.Exec(`CREATE TABLE parcel (
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS parcel (
 		number INTEGER PRIMARY KEY AUTOINCREMENT,
 		client INTEGER,
 		status TEXT,
@@ -57,10 +57,10 @@ func TestAddGetDelete(t *testing.T) {
 
 	retrievedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Client, retrievedParcel.Client)
-	require.Equal(t, parcel.Status, retrievedParcel.Status)
-	require.Equal(t, parcel.Address, retrievedParcel.Address)
-	require.Equal(t, parcel.CreatedAt, retrievedParcel.CreatedAt)
+
+	retrievedParcel.Number = id
+
+	require.Equal(t, parcel, retrievedParcel)
 
 	err = store.Delete(id)
 	require.NoError(t, err)
@@ -143,9 +143,9 @@ func TestGetByClient(t *testing.T) {
 	for _, parcel := range storedParcels {
 		expectedParcel, exists := parcelMap[parcel.Number]
 		require.True(t, exists)
-		require.Equal(t, expectedParcel.Client, parcel.Client)
-		require.Equal(t, expectedParcel.Status, parcel.Status)
-		require.Equal(t, expectedParcel.Address, parcel.Address)
-		require.Equal(t, expectedParcel.CreatedAt, parcel.CreatedAt)
+
+		expectedParcel.Number = parcel.Number
+
+		require.Equal(t, expectedParcel, parcel)
 	}
 }

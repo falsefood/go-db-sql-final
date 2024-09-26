@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 )
 
 type ParcelStore struct {
@@ -35,7 +34,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	p := Parcel{}
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		return p, err
+		return Parcel{}, err
 	}
 
 	return p, nil
@@ -58,6 +57,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		parcels = append(parcels, p)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return parcels, nil
 }
 
@@ -68,29 +71,13 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
-	parcel, err := s.Get(number)
-	if err != nil {
-		return err
-	}
-	if parcel.Status != ParcelStatusRegistered {
-		return fmt.Errorf("cannot change address: parcel status is not 'registered'")
-	}
-
-	query := `UPDATE parcel SET address = ? WHERE number = ?`
-	_, err = s.db.Exec(query, address, number)
+	query := `UPDATE parcel SET address = ? WHERE number = ? AND status = ?`
+	_, err := s.db.Exec(query, address, number, ParcelStatusRegistered)
 	return err
 }
 
 func (s ParcelStore) Delete(number int) error {
-	parcel, err := s.Get(number)
-	if err != nil {
-		return err
-	}
-	if parcel.Status != ParcelStatusRegistered {
-		return fmt.Errorf("cannot delete: parcel status is not 'registered'")
-	}
-
-	query := `DELETE FROM parcel WHERE number = ?`
-	_, err = s.db.Exec(query, number)
+	query := `DELETE FROM parcel WHERE number = ? AND status = ?`
+	_, err := s.db.Exec(query, number, ParcelStatusRegistered)
 	return err
 }
