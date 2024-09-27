@@ -60,6 +60,7 @@ func TestAddGetDelete(t *testing.T) {
 
 	retrievedParcel.Number = id
 
+	parcel.Number = id
 	require.Equal(t, parcel, retrievedParcel)
 
 	err = store.Delete(id)
